@@ -1,0 +1,37 @@
+services:
+  notificacao:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab07-notificacao
+    command: uvicorn servicos.notificacao.main:app --host 0.0.0.0 --port 8002
+    environment:
+      CHAVE_JWT: chave-lab07
+      TOKEN_SERVICO_INTERNO: token-interno-lab07
+      DATABASE_URL_NOTIFICACAO: /app/dados/notificacao.db
+      LIMITE_CARACTERES_MENSAGEM: "4000"
+      LIMITE_NOTIFICACOES_POR_MINUTO: "100"
+      IPS_PERMITIDOS: 127.0.0.1,::1,notificacao,agendamento
+    ports:
+      - "8002:8002"
+    volumes:
+      - .:/app
+
+  agendamento:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab07-agendamento
+    command: uvicorn servicos.agendamento.main:app --host 0.0.0.0 --port 8001
+    environment:
+      CHAVE_JWT: chave-lab07
+      TOKEN_SERVICO_INTERNO: token-interno-lab07
+      URL_BASE_NOTIFICACAO: http://notificacao:8002
+      DATABASE_URL_AGENDAMENTO: /app/dados/agendamento.db
+      IPS_PERMITIDOS: 127.0.0.1,::1,agendamento,notificacao
+    depends_on:
+      - notificacao
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
